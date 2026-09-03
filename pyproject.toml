@@ -1,0 +1,40 @@
+[project]
+name = "llm-se-2027-w1-lab"
+version = "0.1.0"
+description = "W1 lab: issue triage with an LLM component"
+requires-python = ">=3.13"
+dependencies = [
+    "dspy>=2.6",
+    "pydantic>=2.9",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pyright>=1.1.390",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.pyright]
+include = ["src", "tools", "tests"]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+
+# The LLM boundary is the one place in this repository where types stop.
+# DSPy returns dynamically-shaped prediction objects that no type checker can
+# describe. That is not a defect in DSPy - it is what calling a stochastic
+# system looks like from inside a typed program.
+#
+# We do not silence this globally. We name the seam, here, in one place.
+# Everything on the far side of it is your responsibility to validate at
+# runtime, because the compiler has stopped helping you.
+[[tool.pyright.executionEnvironments]]
+root = "src/triage/extract.py"
+reportUnknownMemberType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownArgumentType = "warning"

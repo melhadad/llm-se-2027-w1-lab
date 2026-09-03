@@ -1,0 +1,200 @@
+"""Pre-lab environment check. Run this BEFORE the session, not during it.
+
+    uv run python tools/verify_env.py
+
+On success it prints a token. Paste that token into Moodle before the lab.
+Setup that fails in the room costs the whole room time, which is why this is
+homework.
+
+Checks, in order of how often they fail:
+  1. Python >= 3.13
+  2. uv-managed environment with dependencies resolved
+  3. .env exists and is NOT tracked by git
+  4. exactly one model provider key present, matching LLM_MODEL
+  5. the model key actually works (one tiny live call)
+  6. GITHUB_TOKEN present and valid
+  7. git identity configured
+  8. pre-commit hook installed
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import platform
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+PROVIDERS = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "gemini": "GEMINI_API_KEY",
+    "xai": "XAI_API_KEY",
+}
+
+PASS, FAIL, WARN = "PASS", "FAIL", "WARN"
+results: list[tuple[str, str, str]] = []
+
+
+def check(name: str, status: str, detail: str = "") -> None:
+    results.append((name, status, detail))
+    symbol = {PASS: "  ok  ", FAIL: " FAIL ", WARN: " warn "}[status]
+    print(f"[{symbol}] {name}" + (f" - {detail}" if detail else ""))
+
+
+def load_env() -> dict[str, str]:
+    env: dict[str, str] = {}
+    path = ROOT / ".env"
+    if not path.exists():
+        return env
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        env[key.strip()] = value.strip().strip("\"'")
+    return env
+
+
+def looks_placeholder(value: str) -> bool:
+    return (not value) or "xxxx" in value.lower()
+
+
+def main() -> int:
+    print(f"llm-se-2027 W1 lab - environment check ({platform.system()})\n")
+
+    # 1. Python
+    major, minor = sys.version_info[:2]
+    if (major, minor) >= (3, 13):
+        check("python >= 3.13", PASS, f"{major}.{minor}")
+    else:
+        check("python >= 3.13", FAIL, f"found {major}.{minor}; run `uv sync`")
+
+    # 2. dependencies
+    try:
+        import dspy  # noqa: F401
+        import pydantic  # noqa: F401
+
+        check("dependencies importable", PASS, "dspy, pydantic")
+    except ImportError as exc:
+        check("dependencies importable", FAIL, f"{exc}; run `uv sync`")
+
+    # 3. .env present and untracked
+    env = load_env()
+    if not env:
+        check(".env present", FAIL, "copy .env.example to .env")
+    else:
+        check(".env present", PASS, f"{len(env)} entries")
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", ".env"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if tracked.returncode == 0:
+        check(".env untracked", FAIL, "your .env IS TRACKED. `git rm --cached .env` now, then rotate every key in it")
+    else:
+        check(".env untracked", PASS)
+
+    # 4. exactly one provider
+    model = env.get("LLM_MODEL", "")
+    present = [p for p, k in PROVIDERS.items() if not looks_placeholder(env.get(k, ""))]
+    if not present:
+        check("model provider key", FAIL, "no real key found; fill in exactly one")
+    elif len(present) > 1:
+        check("model provider key", WARN, f"{len(present)} keys set ({', '.join(present)}); only LLM_MODEL is used")
+    else:
+        check("model provider key", PASS, present[0])
+
+    provider = model.split("/", 1)[0] if "/" in model else ""
+    if provider and present and provider not in present:
+        check("LLM_MODEL matches key", FAIL, f"LLM_MODEL is {provider!r} but you set {present[0]!r} key")
+    elif provider:
+        check("LLM_MODEL matches key", PASS, model)
+    else:
+        check("LLM_MODEL matches key", FAIL, "LLM_MODEL missing or malformed (expected provider/model)")
+
+    # 5. live model call
+    if present and provider in present:
+        try:
+            import dspy
+
+            os.environ.setdefault(PROVIDERS[provider], env[PROVIDERS[provider]])
+            lm = dspy.LM(model, max_tokens=16)
+            reply = lm("Reply with the single word: ready")
+            text = reply[0] if isinstance(reply, list) else str(reply)
+            check("live model call", PASS, text.strip()[:40])
+        except Exception as exc:  # noqa: BLE001 - report anything, this is a smoke test
+            check("live model call", FAIL, f"{type(exc).__name__}: {str(exc)[:120]}")
+    else:
+        check("live model call", FAIL, "skipped - fix the key first")
+
+    # 6. GitHub token
+    tok = env.get("GITHUB_TOKEN", "")
+    if looks_placeholder(tok):
+        check("github token", FAIL, "needed by tools/fetch_issues.py; create one with NO scopes")
+    else:
+        req = urllib.request.Request(
+            "https://api.github.com/rate_limit",
+            headers={"Authorization": f"Bearer {tok}", "User-Agent": "w1-verify"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                limit = json.load(resp)["resources"]["core"]["limit"]
+            check("github token", PASS if limit > 1000 else WARN, f"limit={limit}/hr")
+        except urllib.error.HTTPError as exc:
+            check("github token", FAIL, f"rejected ({exc.code})")
+        except Exception as exc:  # noqa: BLE001
+            check("github token", WARN, f"unverified: {type(exc).__name__}")
+
+    # 7. git identity
+    name = subprocess.run(["git", "config", "user.name"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    email = subprocess.run(["git", "config", "user.email"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    if name and email:
+        check("git identity", PASS, f"{name} <{email}>")
+    else:
+        check("git identity", FAIL, "git config user.name / user.email")
+
+    # 8. hook
+    hook = ROOT / ".git" / "hooks" / "pre-commit"
+    if hook.exists():
+        check("pre-commit hook", PASS)
+    else:
+        try:
+            hook.parent.mkdir(parents=True, exist_ok=True)
+            hook.write_text(
+                "#!/bin/sh\nexec python tools/check_secrets.py\n",
+                encoding="utf-8",
+            )
+            hook.chmod(0o755)
+            check("pre-commit hook", PASS, "installed now")
+        except OSError as exc:
+            check("pre-commit hook", WARN, str(exc))
+
+    # verdict
+    failures = [r for r in results if r[1] == FAIL]
+    print()
+    if failures:
+        print(f"{len(failures)} check(s) failed. Fix them before the lab:")
+        for name, _, detail in failures:
+            print(f"  - {name}: {detail}")
+        print("\nStuck? Post in the course forum with this output. Do not paste your keys.")
+        return 1
+
+    ident = f"{name}|{email}|{model}"
+    token_value = hashlib.sha256(ident.encode()).hexdigest()[:12]
+    print("All checks passed.\n")
+    print(f"    CHECKOFF TOKEN: w1-{token_value}")
+    print("\nPaste that line into Moodle before the session.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
