@@ -27,6 +27,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -67,7 +68,9 @@ def looks_placeholder(value: str) -> bool:
 
 
 def main() -> int:
-    print(f"llm-se-2027 W1 lab - environment check ({platform.system()})\n")
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    print(f"llm-se-2027 W1 lab - environment check")
+    print(f"{platform.system()} {platform.release()} | python {sys.version.split()[0]} | {stamp}\n")
 
     # 1. Python
     major, minor = sys.version_info[:2]
@@ -180,19 +183,44 @@ def main() -> int:
 
     # verdict
     failures = [r for r in results if r[1] == FAIL]
+    warnings = [r for r in results if r[1] == WARN]
     print()
+
     if failures:
-        print(f"{len(failures)} check(s) failed. Fix them before the lab:")
-        for name, _, detail in failures:
-            print(f"  - {name}: {detail}")
-        print("\nStuck? Post in the course forum with this output. Do not paste your keys.")
+        print(f"{len(failures)} check(s) failed:")
+        for failed_name, _, detail in failures:
+            print(f"  - {failed_name}: {detail}")
+        print()
+        print("=" * 62)
+        print("SUBMIT THIS OUTPUT TO MOODLE ANYWAY, BEFORE THE DEADLINE.")
+        print("=" * 62)
+        print(
+            "\nA failed run submitted on time is fine - it tells me what broke\n"
+            "and I can help you fix it by email. A missing submission is not:\n"
+            "there is no time to debug your setup during the lab.\n"
+            "\nCopy everything from the first [ ok ] line to here.\n"
+            "Nothing above contains a credential. If you are about to paste a\n"
+            "key, stop - it is not part of this output.\n"
+            "\nStuck? Post the same text in the course forum."
+        )
         return 1
 
     ident = f"{name}|{email}|{model}"
     token_value = hashlib.sha256(ident.encode()).hexdigest()[:12]
-    print("All checks passed.\n")
+    if warnings:
+        print(f"All checks passed ({len(warnings)} warning(s) above, not blocking).\n")
+    else:
+        print("All checks passed.\n")
     print(f"    CHECKOFF TOKEN: w1-{token_value}")
-    print("\nPaste that line into Moodle before the session.")
+    print()
+    print("=" * 62)
+    print("SUBMIT THIS OUTPUT TO MOODLE BEFORE THE DEADLINE.")
+    print("=" * 62)
+    print(
+        "\nCopy everything from the first [ ok ] line to here, not just the\n"
+        "token line. Nothing above contains a credential.\n"
+        "\nYou are set up. See you at the lab."
+    )
     return 0
 
 
