@@ -2,16 +2,43 @@
 
 Software Engineering with AI. Week 1: issue triage.
 
+## What you need installed
+
+**VSCode**, **Claude Code**, **git**, and **uv**. That is the whole list.
+
+```
+macOS     curl -LsSf https://astral.sh/uv/install.sh | sh
+Windows   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**Do not install Python.** `uv` reads `.python-version` and fetches the right
+one itself. A separately installed 3.12 will only fight it.
+
+You also need an **API key for one model provider**, with credit on it. Pick
+one of Anthropic, OpenAI, Gemini or xAI — you do not need all four, and the
+lab uses exactly the one you name in `LLM_MODEL`.
+
 ## Before the lab (do this at home)
 
-```bash
+```
 uv sync
-cp .env.example .env          # fill in ONE model key + a GitHub token
 uv run python tools/verify_env.py
 ```
 
-It prints a checkoff token. Paste that into Moodle **before** the session.
-Setup that fails in the room costs everyone time, which is why this is homework.
+Between those two, copy `.env.example` to `.env` and fill in ONE model key plus
+a GitHub token:
+
+```
+macOS     cp .env.example .env
+Windows   copy .env.example .env
+```
+
+`verify_env.py` prints a checkoff token. Paste that into Moodle **before** the
+session. Setup that fails in the room costs everyone time, which is why this is
+homework.
+
+Commands in this repository are written one per line, without `&&`. The default
+shell on Windows is PowerShell 5.1, which does not support it.
 
 ## What is here
 

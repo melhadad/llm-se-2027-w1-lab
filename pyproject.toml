@@ -15,6 +15,23 @@ dev = [
     "pyright>=1.1.390",
 ]
 
+# Installing the project (editable) is what makes `python -m triage.cli` and
+# `python -m triage_by_agent.cli` work from a plain terminal on every platform.
+# Without it you need PYTHONPATH=src, which is POSIX-only and breaks in
+# PowerShell.
+#
+# `sources = ["src"]` maps the src/ layout onto the package root, and
+# `only-include` keeps everything else out of the wheel. Packages that appear
+# under src/ AFTER the install -- triage_by_agent arrives at 0:45 -- are picked
+# up without re-syncing.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

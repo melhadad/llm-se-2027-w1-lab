@@ -167,18 +167,25 @@ def main() -> int:
 
     # 8. hook
     #
-    # `python` is not on PATH on a stock macOS, and git runs hooks without the
-    # virtualenv active. A hook that says `exec python` therefore fails EVERY
-    # commit with "exec: python: not found" - including the checkoff commit,
-    # for the whole room at once. Write in a real interpreter path, and repair
-    # any already-installed hook that has the old body.
+    # Two ways this goes wrong, both of which have bitten us:
+    #
+    #   `exec python ...`   - `python` is not on PATH on a stock macOS, and git
+    #                         runs hooks without the virtualenv active, so every
+    #                         commit dies with "exec: python: not found".
+    #   `exec "C:\...exe"`  - baking sys.executable in works on macOS but not on
+    #                         Windows, where git runs hooks under Git Bash and a
+    #                         backslashed drive path is not executable there.
+    #
+    # `uv run` is the one spelling that holds on both: uv is a prerequisite, it
+    # is on PATH, and it resolves the project's own interpreter.
     hook_body = (
         "#!/bin/sh\n"
         "# Installed by tools/verify_env.py. Blocks credential-shaped strings.\n"
-        f'exec "{sys.executable}" "$(git rev-parse --show-toplevel)/tools/check_secrets.py"\n'
+        'cd "$(git rev-parse --show-toplevel)" || exit 1\n'
+        "exec uv run python tools/check_secrets.py\n"
     )
     hook = ROOT / ".git" / "hooks" / "pre-commit"
-    stale = hook.exists() and "exec python " in hook.read_text(encoding="utf-8")
+    stale = hook.exists() and "exec uv run python" not in hook.read_text(encoding="utf-8")
     if hook.exists() and not stale:
         check("pre-commit hook", PASS)
     else:

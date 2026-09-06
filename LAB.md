@@ -145,22 +145,23 @@ Rules:
 
 Now apply it and see what the machine knows that you did not.
 
-```bash
-git apply --check exercise-b/agent-change.diff \
-  || git checkout -- src/triage_by_agent tests/exercise_b
+```
 git apply exercise-b/agent-change.diff
-
 uv run pytest
 uv run pyright
-PYTHONPATH=src uv run python -m triage_by_agent.cli batch --split dev --offline
+uv run python -m triage_by_agent.cli batch --split dev --offline
 ```
 
 `--offline` swaps the model for a deterministic stub, so this costs nothing and
 everyone in the room gets the same answer.
 
-(`PYTHONPATH=src` because this project is not installed into the environment.
-`pyproject.toml` tells pytest where `src/` is, but plain `python -m` has no
-such setting. Your own Exercise A command line needs the same thing.)
+If `git apply` refuses because you edited the released package while reading,
+put it back and try again:
+
+```
+git checkout -- src/triage_by_agent tests/exercise_b
+git apply exercise-b/agent-change.diff
+```
 
 In the part 2 section of `review-findings.md`, record what the tooling found
 that you did not, what it missed that you caught, and — for anything you
@@ -220,9 +221,12 @@ Push to your repository:
 - [ ] `improvement-log.md` — at least three entries, classified
 - [ ] `sessions/` — session logs exported and committed
 
-```bash
+```
 uv run python tools/export_session_log.py
-git add -A && git add -f sessions/ && git commit -m "W1 lab" && git push
+git add -A
+git add -f sessions/
+git commit -m "W1 lab"
+git push
 ```
 
 (`sessions/*.jsonl` is gitignored so that a stray transcript never lands in a
