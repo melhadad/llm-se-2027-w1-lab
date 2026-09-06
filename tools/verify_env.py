@@ -15,6 +15,7 @@ Checks, in order of how often they fail:
   6. GITHUB_TOKEN present and valid
   7. git identity configured
   8. pre-commit hook installed
+  9. Node present, and pyright actually runs
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ import hashlib
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import urllib.error
@@ -196,6 +198,41 @@ def main() -> int:
             check("pre-commit hook", PASS, "repaired" if stale else "installed now")
         except OSError as exc:
             check("pre-commit hook", WARN, str(exc))
+
+    # 9. node, and pyright actually running
+    #
+    # pyright is a Node program wearing a Python wrapper. With no Node on PATH
+    # it downloads one on first use, which is a slow network fetch at exactly
+    # the wrong moment and is unreliable on Windows. So we check for Node here,
+    # at home, and then RUN pyright once - which also warms its package cache,
+    # so the first run in the room is fast.
+    node = shutil.which("node")
+    if node:
+        try:
+            version = subprocess.run([node, "--version"], capture_output=True,
+                                     text=True, timeout=30).stdout.strip()
+            check("node", PASS, version)
+        except (OSError, subprocess.SubprocessError) as exc:
+            check("node", WARN, f"found at {node} but would not run: {exc}")
+    else:
+        check("node", FAIL, "install it with nvm - see README, 'What you need installed'")
+
+    try:
+        pyright = subprocess.run(
+            ["uv", "run", "pyright", "--outputjson"],
+            cwd=ROOT, capture_output=True, text=True, timeout=600,
+        )
+        # Exit code 1 just means it found type errors, which is not our problem
+        # here. What we are checking is that it ran at all.
+        if pyright.returncode in (0, 1):
+            check("pyright runs", PASS)
+        else:
+            detail = (pyright.stderr or pyright.stdout).strip().splitlines()
+            check("pyright runs", FAIL, detail[-1] if detail else f"exit {pyright.returncode}")
+    except subprocess.TimeoutExpired:
+        check("pyright runs", FAIL, "timed out - it was probably downloading Node")
+    except OSError as exc:
+        check("pyright runs", FAIL, str(exc))
 
     # verdict
     failures = [r for r in results if r[1] == FAIL]

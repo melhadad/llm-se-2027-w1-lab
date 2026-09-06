@@ -4,7 +4,10 @@ Software Engineering with AI. Week 1: issue triage.
 
 ## What you need installed
 
-**VSCode**, **Claude Code**, **git**, and **uv**. That is the whole list.
+**VSCode**, **Claude Code**, **git**, **uv**, and **Node**. That is the whole
+list.
+
+### uv
 
 ```
 macOS     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -13,6 +16,49 @@ Windows   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 **Do not install Python.** `uv` reads `.python-version` and fetches the right
 one itself. A separately installed 3.12 will only fight it.
+
+### Node, via nvm
+
+`uv run pyright` is a Node program behind a Python wrapper. With no Node on
+your PATH it silently downloads one the first time you run it — a slow fetch at
+the worst possible moment, and unreliable on Windows. Install it up front.
+
+Use a version manager rather than a system-wide install: it keeps Node out of
+system directories, needs no administrator rights on macOS, and is trivial to
+undo. **The macOS and Windows tools are different projects with the same
+nickname** — do not follow macOS instructions on Windows.
+
+**macOS** — [nvm](https://github.com/nvm-sh/nvm):
+
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+```
+
+Close the terminal and open a new one, then:
+
+```
+nvm install --lts
+nvm use --lts
+node --version
+```
+
+The installer appends its setup to your shell profile (`~/.zshrc` on a current
+macOS). If `nvm: command not found` in the new terminal, that line did not land
+— open `~/.zshrc`, check for the `NVM_DIR` block, and re-open the terminal.
+
+**Windows** — [nvm-windows](https://github.com/coreybutler/nvm-windows), a
+different tool by a different author. Download `nvm-setup.exe` from its
+releases page and run it. Then, in a **new** terminal opened **as
+Administrator** (nvm-windows needs it to switch versions):
+
+```
+nvm install lts
+nvm use lts
+node --version
+```
+
+Any Node 20 or newer is fine. You will never write JavaScript in this course —
+Node is here purely so the type checker starts instantly.
 
 You also need an **API key for one model provider**, with credit on it. Pick
 one of Anthropic, OpenAI, Gemini or xAI — you do not need all four, and the
