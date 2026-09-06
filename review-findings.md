@@ -1,7 +1,20 @@
-# Exercise B — Review findings
-
 Name:
 Date:
+
+# Exercise A - Execution findings
+
+Execute your triage module on at least 20 issues from `data/snapshot/dev.json`. 
+Look at the output. Write down anything that surprised you.
+
+---
+### Surprise 1
+
+- **Input issue json**:
+- **Output triaged issue**:
+- **What is surprising**:
+
+
+# Exercise B — Review findings
 
 ## Part 1 — found by reading
 

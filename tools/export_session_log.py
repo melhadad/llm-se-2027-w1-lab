@@ -20,9 +20,7 @@ things that should not be in a public repository.
 
 from __future__ import annotations
 
-import json
 import re
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -46,8 +44,16 @@ def redact(text: str) -> str:
 
 
 def project_key(path: Path) -> str:
-    """Claude Code encodes the project path as a flattened directory name."""
-    return str(path).replace("/", "-").replace("\\", "-")
+    """Claude Code encodes the project path as a flattened directory name.
+
+    Every character that is not a letter or a digit becomes a dash, so
+    /Users/you/w1-lab      -> -Users-you-w1-lab
+    C:\\Users\\you\\w1-lab    -> C--Users-you-w1-lab
+    Matching on the whole encoded path matters: a substring match on the
+    project folder name alone also matches sibling checkouts such as
+    ...-w1-lab-instructor, and would export their transcripts into this repo.
+    """
+    return re.sub(r"[^A-Za-z0-9]", "-", str(path))
 
 
 def main() -> None:
@@ -57,9 +63,11 @@ def main() -> None:
         print("If you used a different agent, copy its logs into sessions/ by hand.")
         return
 
-    candidates = [d for d in CLAUDE_PROJECTS.iterdir() if d.is_dir() and ROOT.name in d.name]
+    key = project_key(ROOT)
+    candidates = [d for d in CLAUDE_PROJECTS.iterdir() if d.is_dir() and d.name == key]
     if not candidates:
-        candidates = sorted(CLAUDE_PROJECTS.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)[:1]
+        directories = [d for d in CLAUDE_PROJECTS.iterdir() if d.is_dir()]
+        candidates = sorted(directories, key=lambda p: p.stat().st_mtime, reverse=True)[:1]
         if candidates:
             print(f"no exact project match; using most recent: {candidates[0].name}")
 
@@ -70,7 +78,8 @@ def main() -> None:
             dest = DEST / f"{stamp}-{src.stem[:8]}.jsonl"
             if dest.exists():
                 continue
-            dest.write_text(redact(src.read_text(encoding="utf-8", errors="replace")), encoding="utf-8")
+            text = redact(src.read_text(encoding="utf-8", errors="replace"))
+            dest.write_text(text, encoding="utf-8", newline="")
             exported += 1
             print(f"exported {dest.relative_to(ROOT)}")
 
@@ -78,7 +87,7 @@ def main() -> None:
         print("nothing new to export")
     else:
         print(f"\n{exported} session(s) exported. Now commit them:")
-        print("    git add sessions/ && git commit -m 'session logs'")
+        print("    git add -f sessions/ && git commit -m 'session logs'")
 
 
 if __name__ == "__main__":
