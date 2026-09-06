@@ -166,18 +166,27 @@ def main() -> int:
         check("git identity", FAIL, "git config user.name / user.email")
 
     # 8. hook
+    #
+    # `python` is not on PATH on a stock macOS, and git runs hooks without the
+    # virtualenv active. A hook that says `exec python` therefore fails EVERY
+    # commit with "exec: python: not found" - including the checkoff commit,
+    # for the whole room at once. Write in a real interpreter path, and repair
+    # any already-installed hook that has the old body.
+    hook_body = (
+        "#!/bin/sh\n"
+        "# Installed by tools/verify_env.py. Blocks credential-shaped strings.\n"
+        f'exec "{sys.executable}" "$(git rev-parse --show-toplevel)/tools/check_secrets.py"\n'
+    )
     hook = ROOT / ".git" / "hooks" / "pre-commit"
-    if hook.exists():
+    stale = hook.exists() and "exec python " in hook.read_text(encoding="utf-8")
+    if hook.exists() and not stale:
         check("pre-commit hook", PASS)
     else:
         try:
             hook.parent.mkdir(parents=True, exist_ok=True)
-            hook.write_text(
-                "#!/bin/sh\nexec python tools/check_secrets.py\n",
-                encoding="utf-8",
-            )
+            hook.write_text(hook_body, encoding="utf-8")
             hook.chmod(0o755)
-            check("pre-commit hook", PASS, "installed now")
+            check("pre-commit hook", PASS, "repaired" if stale else "installed now")
         except OSError as exc:
             check("pre-commit hook", WARN, str(exc))
 

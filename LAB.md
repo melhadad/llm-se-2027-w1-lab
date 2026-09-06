@@ -51,6 +51,16 @@ uv run python tools/classify_issues.py
 `test.json` is sealed. Do not open it. Do not let your agent read it. You will
 need it later in the course and its only value is that nobody has seen it.
 
+### Scope, and where it goes
+
+Triage only: **one issue in, one structured record out.** Not routing, not
+queues, not deciding who gets paged — just turning an unstructured issue into
+data. Deciding what to *do* with that record is a different job, and you will
+meet someone else's answer to it after the break.
+
+Your code goes in **`src/triage/`**. That package is yours: any files you like,
+named however you like. Nothing released later in the lab is written into it.
+
 ### Constraints
 
 - Runs from the command line, takes an issue, prints a triage record.
@@ -78,29 +88,27 @@ wrong, classified. Do this before 0:45; you will not get the chance afterwards.
 
 ---
 
-## Exercise B — Review an agent's work (35 min)
+## Exercise B — Review an agent's work (40 min)
 
-At 0:45 your instructor releases `exercise-b/`. It contains a working
-implementation of roughly the task you just did, plus a diff proposing a
-change to it.
+At 0:45 your instructor releases two things into your repository:
 
-The change was produced by a coding agent. **Every test passes.** CI is green.
+**`src/triage_by_agent/`** — a second answer to the brief you just worked on.
+Same job as your `src/triage/`, written by someone else. Both are importable
+side by side, which is the point:
 
-### Your job
+```python
+from triage import ...             # yours
+from triage_by_agent import ...    # theirs
+```
 
-Review the diff as if you were the maintainer who has to approve it. Record
-every problem you find in `review-findings.md`, using the format in that file.
+**`exercise-b/agent-change.diff`** — a change proposed on top of it. An agent
+was asked to extend triage into a *routing* agent: decide which queue each
+issue belongs in and how fast it is due, and add a batch path for processing a
+whole day's issues at once. The agent opened the change with this description:
 
-Rules:
+> Adds routing and batch processing. All tests pass, CI is green.
 
-- **No AI assistance for this exercise.** Close the agent. This is a
-  measurement of you, and it is the only one you will get before the course
-  changes how you think.
-- Work alone.
-- Hard stop at 1:20 whether you are finished or not.
-- Record uncertain findings too, marked as uncertain. Precision matters as
-  much as recall, and there is at least one thing in the diff that looks
-  wrong and is not.
+Note who is making that claim.
 
 ### What you are looking for
 
@@ -110,9 +118,65 @@ anything that touches trust boundaries, consistency with how the rest of the
 codebase names and structures things, and what happens when the model returns
 something unexpected.
 
+`src/triage_by_agent/` is the code as it stood before the change. If the diff
+introduces a second name for something that package already named, that is a
+finding.
+
+### Part 1 — Review, by reading (28 min)
+
+Review the diff as the maintainer who has to approve it. Record every problem
+in `review-findings.md`.
+
+**Do not run anything, and do not apply the diff yet.** This part measures what
+you catch by reading — the only skill that scales to changes you did not write.
+
+Rules:
+
+- **No AI assistance for this exercise.** Close the agent. This is a
+  measurement of you, and it is the only one you will get before the course
+  changes how you think.
+- Work alone.
+- Record uncertain findings too, marked as uncertain. Precision matters as
+  much as recall, and there is at least one thing in the diff that looks
+  wrong and is not.
+- **Findings lock at 1:13.** After that, part 1 gets no additions.
+
+### Part 2 — Verify, by running (12 min)
+
+Now apply it and see what the machine knows that you did not.
+
+```bash
+git apply --check exercise-b/agent-change.diff \
+  || git checkout -- src/triage_by_agent tests/exercise_b
+git apply exercise-b/agent-change.diff
+
+uv run pytest
+uv run pyright
+uv run python -m triage_by_agent.cli batch --split dev --offline
+```
+
+`--offline` swaps the model for a deterministic stub, so this costs nothing and
+everyone in the room gets the same answer.
+
+In the part 2 section of `review-findings.md`, record what the tooling found
+that you did not, what it missed that you caught, and — for anything you
+missed — whether it was findable by reading at all.
+
+That last question is what most of this course is about.
+
+### If you finish part 1 early
+
+Open your `src/triage/` and `src/triage_by_agent/` side by side and add three
+lines to `docs/decisions.md`: three places where the two implementations
+decided something different about a question the brief never answered. What
+fields exist, what happens to an issue with no clear type, what "confident"
+means as a number.
+
+Neither is the right answer. That is the finding, and next week is built on it.
+
 ---
 
-## Reveal and scoring (15 min)
+## Reveal and scoring (13 min)
 
 The seeded defect list goes up on the screen. Score your own findings:
 
@@ -120,9 +184,15 @@ The seeded defect list goes up on the screen. Score your own findings:
 - **missed** — you did not
 - **false positive** — you flagged something that is not a problem
 
-Compute and record your detection rate in `review-findings.md`. Nobody is
-graded on this number. It goes on the board anonymously, and you will meet it
-again in W7 when we look at how well frontier models do at the same task.
+You will end up with **two** detection rates: one for what you found by
+reading, and one that includes what the tooling handed you in part 2. The gap
+between them is the interesting number, and it is not a measure of you — it is
+a measure of which defects a machine can catch and which ones still need a
+person. We come back to that in W11.
+
+Nobody is graded on either number. They go on the board anonymously, and you
+will meet them again in W7 next to how well frontier models do on the same
+diff.
 
 ---
 
@@ -140,16 +210,19 @@ gets built out of what went wrong in this room today, not handed to you.
 
 Push to your repository:
 
-- [ ] working feature from Exercise A, typed, with a test
+- [ ] working feature from Exercise A in `src/triage/`, typed, with a test
 - [ ] `docs/decisions.md` — the unspecified decisions you made
-- [ ] `review-findings.md` — findings and your detection rate
+- [ ] `review-findings.md` — findings from both parts, and both detection rates
 - [ ] `improvement-log.md` — at least three entries, classified
 - [ ] `sessions/` — session logs exported and committed
 
 ```bash
 uv run python tools/export_session_log.py
-git add -A && git commit -m "W1 lab" && git push
+git add -A && git add -f sessions/ && git commit -m "W1 lab" && git push
 ```
+
+(`sessions/*.jsonl` is gitignored so that a stray transcript never lands in a
+commit by accident. The `-f` is deliberate: you are choosing to commit these.)
 
 Then tell your instructor, out loud, the one failure you found most
 surprising, and why.

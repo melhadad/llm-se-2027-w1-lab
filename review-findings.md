@@ -3,9 +3,15 @@
 Name:
 Date:
 
+## Part 1 — found by reading
+
 Record every problem you find in the released diff. One block per finding.
 Add as many as you need. Do not delete the unused ones — an empty block is
 information too.
+
+**These lock at 1:13.** Once you start running the code, anything new goes in
+part 2 instead. That boundary is the measurement: without it there is no way to
+tell what reading caught from what the test runner caught.
 
 Confidence: `certain` | `probable` | `uncertain`
 
@@ -71,15 +77,41 @@ Confidence: `certain` | `probable` | `uncertain`
 
 ---
 
+## Part 2 — found by running
+
+After `git apply`, `uv run pytest`, `uv run pyright` and the batch run.
+
+### What the tooling found that I did not
+
+- **Which tool** (pytest / pyright / running it):
+- **What it showed**:
+- **Would I have found this by reading?** (be honest):
+
+### What I found by reading that the tooling did not
+
+- 
+
+### Anything the tooling reported that turned out not to be a problem
+
+- 
+
+---
+
 ## Scoring (fill in after the reveal)
 
-| | count |
-|---|---|
-| Seeded defects found | |
-| Seeded defects missed | |
-| False positives | |
+| | part 1 (reading) | part 1 + part 2 |
+|---|---|---|
+| Seeded defects found | | |
+| Seeded defects missed | | |
+| False positives | | |
 
-**Detection rate**: found / (found + missed) = ____%
+**Reading detection rate**: found / (found + missed) = ____%
+
+**Combined detection rate**: found / (found + missed) = ____%
+
+The gap between those two is not a measure of you. It is a measure of which
+defects a machine can catch and which ones still need a person — and the
+second group is the reason this course exists.
 
 ### One sentence: what did you miss, and why do you think you missed it?
 

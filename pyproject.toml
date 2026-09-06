@@ -23,7 +23,11 @@ addopts = "-q"
 pythonpath = ["src"]
 
 [tool.pyright]
-include = ["src", "tools", "tests"]
+# Your code, and only your code. `uv run pyright` is a constraint the lab puts
+# on what you build, so it has to be a check you can actually pass: tools/ is
+# course scaffolding you did not write and are not graded on, and it does not
+# currently type-clean.
+include = ["src", "tests"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
@@ -33,11 +37,28 @@ reportMissingTypeStubs = false
 # describe. That is not a defect in DSPy - it is what calling a stochastic
 # system looks like from inside a typed program.
 #
-# We do not silence this globally. We name the seam, here, in one place.
+# We do not silence this globally. We name each seam, one FILE at a time.
 # Everything on the far side of it is your responsibility to validate at
 # runtime, because the compiler has stopped helping you.
+#
+# Do NOT "simplify" these to a directory. Pyright picks the first execution
+# environment whose root is a prefix of the file being checked, so
+# root = "src/triage" risks also matching src/triage_by_agent/... and quietly
+# relaxing code you did not write. Files only, most specific first.
+
+# Exercise A - your seam. If you call DSPy from somewhere other than
+# extract.py, point this at that file instead. Do not widen it to a directory.
 [[tool.pyright.executionEnvironments]]
 root = "src/triage/extract.py"
+reportUnknownMemberType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownArgumentType = "warning"
+
+# Exercise B - the released package's seam. It arrives at 0:45; until then this
+# entry matches nothing, which is harmless (pyright does not require the root
+# to exist).
+[[tool.pyright.executionEnvironments]]
+root = "src/triage_by_agent/extract.py"
 reportUnknownMemberType = "warning"
 reportUnknownVariableType = "warning"
 reportUnknownArgumentType = "warning"
