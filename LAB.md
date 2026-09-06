@@ -6,6 +6,12 @@ Before you start, confirm you ran `uv run python tools/verify_env.py` and
 pasted your checkoff token into Moodle. If you did not, do that first and
 expect to fall behind.
 
+**Keep `improvement-log.md` open for the whole session.** Every time the agent
+gets something wrong today — misreads the brief, invents a field, needs telling
+twice — stop and write the entry while it is in front of you. Three entries is
+the minimum for checkoff and they take a minute each *now*. Written from memory
+at 1:55 they are worth nothing, and the file says so itself.
+
 ---
 
 ## Exercise A — Ship a triage feature (35 min)
@@ -25,14 +31,22 @@ happens while you do.
 
 ### Data
 
+`data/snapshot/{train,dev,test}.json` is **already in your repository**. It was
+fetched and labelled ahead of the session; you do not need to build it, and you
+should not try to during the lab.
+
+The issues come from three real projects — **litestar** (Python web framework),
+**hono** (TypeScript web framework), and **textual** (Python terminal UI
+framework).
+
+Do not run `tools/fetch_issues.py` today. Forty people pulling 400 issues each
+from one lecture-room IP is a rate limit, not a dataset. The tools are there for
+later in the course, or if your instructor tells you the snapshot is missing:
+
 ```bash
-uv run python tools/fetch_issues.py --limit 400
+uv run python tools/fetch_issues.py --limit 400   # not during the lab
 uv run python tools/classify_issues.py
 ```
-
-This pulls issues from three real projects — **litestar** (Python web
-framework), **hono** (TypeScript web framework), and **textual** (Python
-terminal UI framework) — and writes `data/snapshot/{train,dev,test}.json`.
 
 `test.json` is sealed. Do not open it. Do not let your agent read it. You will
 need it later in the course and its only value is that nobody has seen it.
@@ -58,6 +72,9 @@ your agent, that is the attack, not a coincidence.
 
 Run it over twenty issues from `dev.json`. Look at the output. Write down
 anything that surprised you.
+
+Then add your Exercise A entries to `improvement-log.md` — where the agent went
+wrong, classified. Do this before 0:45; you will not get the chance afterwards.
 
 ---
 
