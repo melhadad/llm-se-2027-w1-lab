@@ -18,6 +18,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# src layout: this project is not installed into the environment, so tests
+# import `triage` from the source tree directly.
+pythonpath = ["src"]
 
 [tool.pyright]
 include = ["src", "tools", "tests"]
