@@ -45,6 +45,18 @@ pythonpath = ["src"]
 # course scaffolding you did not write and are not graded on, and it does not
 # currently type-clean.
 include = ["src", "tests"]
+
+# `include` is enough for `uv run pyright` on the command line, but it is NOT
+# enough for the editor: Pylance analyses whatever file you have open, whether
+# or not it is in `include`. Open tools/verify_env.py and strict mode lights up
+# the Problems tab with 14 errors in code you did not write.
+#
+# `ignore` is the setting that both honour -- the files are still parsed (so
+# go-to-definition and completion keep working) but their diagnostics are
+# suppressed. Keeping this here rather than in .vscode/settings.json means the
+# CLI and the editor stay in agreement, and Windows/Linux students who never
+# open the workspace file get the same behaviour.
+ignore = ["tools"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
