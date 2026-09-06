@@ -282,7 +282,8 @@ do not let an agent index it. Its only value is that nobody has looked at it.
 ## Dataset attribution
 
 Issues are fetched from public GitHub repositories for coursework:
-* [litestar](https://github.com/litestar-org/litestar),
-* [hono](https://github.com/honojs/hono),
-* [textual](https://github.com/Textualize/textual).
+* [litestar](https://github.com/litestar-org/litestar)
+* [hono](https://github.com/honojs/hono)
+* [textual](https://github.com/Textualize/textual)
+
 Content belongs to its authors. Redistributed here for teaching only.

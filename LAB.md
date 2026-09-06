@@ -108,7 +108,16 @@ wrong, classified. Do this before 0:45; you will not get the chance afterwards.
 
 ## Exercise B — Review a coding agent's work (40 min)
 
-At 0:45 your instructor releases two things into your repository:
+At 0:45 your instructor releases two things into your repository.
+To obtain the changes in your environment, execute these commands in the shell:
+
+```
+git add -A
+git commit -m "exercise A"
+git pull --rebase
+```
+
+You will see 8 new files.
 
 **`src/triage_by_agent/`** — a second answer to the brief you just worked on.
 Same job as your `src/triage/`, written by someone else. Both are importable
@@ -119,7 +128,7 @@ from triage import ...             # yours
 from triage_by_agent import ...    # theirs
 ```
 
-**`exercise-b/agent-change.diff`** — a change proposed on top of it. An agent
+**`exercise-b/agent-change.diff`** — a change proposed on top of it. A coding agent
 was asked to extend triage into a *routing* agent: decide which queue each
 issue belongs in and how fast it is due, and add a batch path for processing a
 whole day's issues at once. The agent opened the change with this description:
