@@ -152,11 +152,15 @@ git apply exercise-b/agent-change.diff
 
 uv run pytest
 uv run pyright
-uv run python -m triage_by_agent.cli batch --split dev --offline
+PYTHONPATH=src uv run python -m triage_by_agent.cli batch --split dev --offline
 ```
 
 `--offline` swaps the model for a deterministic stub, so this costs nothing and
 everyone in the room gets the same answer.
+
+(`PYTHONPATH=src` because this project is not installed into the environment.
+`pyproject.toml` tells pytest where `src/` is, but plain `python -m` has no
+such setting. Your own Exercise A command line needs the same thing.)
 
 In the part 2 section of `review-findings.md`, record what the tooling found
 that you did not, what it missed that you caught, and — for anything you
