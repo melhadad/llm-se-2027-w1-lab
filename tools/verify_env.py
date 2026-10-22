@@ -178,22 +178,30 @@ def main() -> int:
     #                         Windows, where git runs hooks under Git Bash and a
     #                         backslashed drive path is not executable there.
     #
-    # `uv run` is the one spelling that holds on both: uv is a prerequisite, it
-    # is on PATH, and it resolves the project's own interpreter.
+    # The scanner uses only the standard library. Prefer a working system
+    # interpreter: Windows Application Control can block the .venv executable.
+    # Probe first because Windows may also expose a non-working Python alias.
+    # Keep uv as a fallback for machines without Python on PATH, without loading
+    # the project's virtualenv or synchronizing its dependencies during a commit.
     hook_body = (
         "#!/bin/sh\n"
         "# Installed by tools/verify_env.py. Blocks credential-shaped strings.\n"
         'cd "$(git rev-parse --show-toplevel)" || exit 1\n'
-        "exec uv run python tools/check_secrets.py\n"
+        "for interpreter in python3 python; do\n"
+        '    if "$interpreter" -c \'import sys; sys.exit(sys.version_info < (3, 10))\' 2>/dev/null; then\n'
+        '        exec "$interpreter" tools/check_secrets.py\n'
+        "    fi\n"
+        "done\n"
+        "exec uv run --no-project python tools/check_secrets.py\n"
     )
     hook = ROOT / ".git" / "hooks" / "pre-commit"
-    stale = hook.exists() and "exec uv run python" not in hook.read_text(encoding="utf-8")
+    stale = hook.exists() and hook.read_text(encoding="utf-8") != hook_body
     if hook.exists() and not stale:
         check("pre-commit hook", PASS)
     else:
         try:
             hook.parent.mkdir(parents=True, exist_ok=True)
-            hook.write_text(hook_body, encoding="utf-8")
+            hook.write_text(hook_body, encoding="utf-8", newline="\n")
             hook.chmod(0o755)
             check("pre-commit hook", PASS, "repaired" if stale else "installed now")
         except OSError as exc:

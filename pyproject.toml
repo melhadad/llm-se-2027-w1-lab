@@ -5,9 +5,13 @@ description = "W1 lab: issue triage with an LLM component"
 requires-python = ">=3.13"
 dependencies = [
     "dspy>=2.6",
+    "openai>=2.54",
     "pydantic>=2.9",
     "python-dotenv>=1.0",
 ]
+
+[project.scripts]
+codingagent = "codingagent:main"
 
 [dependency-groups]
 dev = [
@@ -59,6 +63,12 @@ addopts = "-q"
 pythonpath = ["src"]
 
 [tool.pyright]
+# Resolve the editable src layout and uv environment without querying a system
+# interpreter, which may differ from the project's interpreter on Windows.
+extraPaths = ["src"]
+venvPath = "."
+venv = ".venv"
+
 # Your code, and only your code. `uv run pyright` is a constraint the lab puts
 # on what you build, so it has to be a check you can actually pass: tools/ is
 # course code you did not write and are not graded on, and it does not

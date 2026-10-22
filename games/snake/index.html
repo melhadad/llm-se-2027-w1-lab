@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Arcade Snake</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="hud">
+      <div class="title">Arcade Snake</div>
+      <div class="scores">
+        <div>Score: <span id="score">0</span></div>
+        <div>Best: <span id="best">0</span></div>
+      </div>
+    </header>
+
+    <section class="board-wrap">
+      <canvas id="board" aria-label="Snake game board"></canvas>
+      <div id="overlay" class="overlay hidden">
+        <div class="overlay-inner">
+          <h2 id="overlay-title">Game Over</h2>
+          <p id="overlay-msg"></p>
+          <div class="overlay-actions">
+            <button id="restart">Restart (R)</button>
+            <button id="start">Start</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="controls">
+      <div class="directions" role="group" aria-label="Direction controls">
+        <button class="btn dir" data-dir="up" aria-label="Up">▲</button>
+        <div class="hrow">
+          <button class="btn dir" data-dir="left" aria-label="Left">◀</button>
+          <button class="btn dir" data-dir="right" aria-label="Right">▶</button>
+        </div>
+        <button class="btn dir" data-dir="down" aria-label="Down">▼</button>
+      </div>
+
+      <div class="actions">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn">Pause (Space)</button>
+        <button id="restartBtn">Restart (R)</button>
+      </div>
+    </nav>
+
+    <footer class="footer">Use arrows or WASD. Space to pause. Touch controls supported.</footer>
+  </main>
+
+  <script src="game.js"></script>
+  <script>
+    // DOM guarded code: will only run in browser
+    if (typeof window !== 'undefined') {
+      (function(){
+        const canvas = document.getElementById('board');
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlayMsg = document.getElementById('overlay-msg');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const restart = document.getElementById('restart');
+        const startOverlayBtn = document.getElementById('start');
+
+        const CELL = 20; // grid cell pixels for default layout
+        // create game
+        const game = new SnakeGame({cols: 20, rows: 20});
+
+        // drawing setup
+        const ctx = canvas.getContext('2d');
+        function resize(){
+          const wrap = document.querySelector('.board-wrap');
+          // use the actual CSS-sized board-wrap width to determine canvas pixels
+          const rect = wrap.getBoundingClientRect();
+          const size = rect.width; // board-wrap is constrained by CSS to be square
+          // ensure canvas is 100% of container visually
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
+          // ensure crisp canvas using device pixel ratio
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const px = Math.max(1, Math.floor(size * dpr));
+          canvas.width = px;
+          canvas.height = px;
+          ctx.setTransform(1,0,0,1,0,0);
+          ctx.scale((canvas.width / game.cols) , (canvas.height / game.rows));
+          draw();
+        }
+        window.addEventListener('resize', resize);
+
+        function draw(){
+          // background
+          ctx.fillStyle = '#061028';
+          ctx.fillRect(0,0,game.cols,game.rows);
+
+          // grid subtle
+          ctx.strokeStyle = 'rgba(0,255,0,0.03)';
+          ctx.lineWidth = 0.02;
+          for(let x=0;x<=game.cols;x++){
+            ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,game.rows); ctx.stroke();
+          }
+          for(let y=0;y<=game.rows;y++){
+            ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(game.cols,y); ctx.stroke();
+          }
+
+          // food
+          if (game.food) {
+            ctx.fillStyle = '#ff6';
+            drawCell(game.food.x, game.food.y);
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(game.food.x+0.25, game.food.y+0.25, 0.5, 0.5);
+          }
+
+          // snake
+          const s = game.snake;
+          if (s && s.length){
+            for(let i=s.length-1;i>=0;i--){
+              const part = s[i];
+              ctx.fillStyle = i===0 ? '#bfff00' : '#6bff3a';
+              drawCell(part.x, part.y);
+            }
+          }
+        }
+
+        function drawCell(x,y){
+          ctx.beginPath();
+          ctx.rect(x+0.05, y+0.05, 0.9, 0.9);
+          ctx.fill();
+        }
+
+        // sync UI
+        function updateUI(){
+          scoreEl.textContent = game.score;
+          bestEl.textContent = game.best || 0;
+          pauseBtn.textContent = game.status === 'paused' ? 'Resume (Space)' : 'Pause (Space)';
+          pauseBtn.disabled = game.status === 'over' || game.status === 'won';
+          // control Start button visibility/label based on state
+          if (game.status === 'over' || game.status === 'won'){
+            overlay.classList.remove('hidden');
+            overlayTitle.textContent = game.status === 'won' ? 'You Win!' : 'Game Over';
+            overlayMsg.textContent = game.status === 'won' ? 'You filled the board.' : ('Score: '+game.score);
+            // hide start controls when game is finished
+            startOverlayBtn.style.display = 'none';
+            startBtn.style.display = 'none';
+          } else if (game.status === 'ready' || game.status === 'paused'){
+            overlay.classList.remove('hidden');
+            overlayTitle.textContent = game.status === 'ready' ? 'Ready' : 'Paused';
+            overlayMsg.textContent = game.status === 'ready' ? 'Press Start or use arrows to begin.' : '';
+            // label appropriately
+            startOverlayBtn.style.display = '';
+            startOverlayBtn.textContent = game.status === 'paused' ? 'Resume' : 'Start';
+            startBtn.style.display = '';
+            startBtn.textContent = game.status === 'paused' ? 'Resume' : 'Start';
+            // keep focusable/enabled
+            startOverlayBtn.disabled = false;
+            startBtn.disabled = false;
+          } else {
+            overlay.classList.add('hidden');
+            // make sure start button visible during play (as pause/resume control might be hidden)
+            startOverlayBtn.style.display = '';
+            startBtn.style.display = '';
+            startBtn.textContent = 'Playing';
+            startBtn.disabled = true;
+          }
+          draw();
+        }
+
+        // start/pause/restart
+        startBtn.addEventListener('click', ()=>{
+          if (game.status === 'ready'){
+            if (game.start) game.start();
+            game.resume();
+          } else if (game.status === 'paused'){
+            game.resume();
+          }
+          updateUI();
+        });
+        pauseBtn.addEventListener('click', ()=>{ game.togglePause(); updateUI(); });
+        restartBtn.addEventListener('click', ()=>{ game.reset(); updateUI(); });
+        restart.addEventListener('click', ()=>{ game.reset(); updateUI(); });
+        startOverlayBtn.addEventListener('click', ()=>{
+          if (game.status === 'ready'){
+            if (game.start) game.start();
+            game.resume();
+          } else if (game.status === 'paused'){
+            game.resume();
+          }
+          updateUI();
+        });
+
+        // keyboard
+        window.addEventListener('keydown', (e)=>{
+          const k = e.key.toLowerCase();
+          if (['arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
+          if (k === ' '){ e.preventDefault(); game.togglePause(); updateUI(); return; }
+          if (k === 'r'){ game.reset(); updateUI(); return; }
+          const map = {w:'up',s:'down',a:'left',d:'right', 'arrowup':'up','arrowdown':'down','arrowleft':'left','arrowright':'right'};
+          const dir = map[k] || map[e.key.toLowerCase()];
+          if (dir) {
+            e.preventDefault();
+            game.setDirection(dir);
+            if (game.status === 'ready') game.start();
+            updateUI();
+          }
+        }, {passive:false});
+
+        // touch buttons
+        document.querySelectorAll('.dir').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            game.setDirection(b.dataset.dir);
+            if (game.status === 'ready') game.start();
+            updateUI();
+          });
+        });
+
+        // CSS touch-action prevents scrolling without cancelling button clicks.
+
+        // game tick loop
+        let last = performance.now();
+        function loop(now){
+          const elapsed = now - last;
+          last = now;
+          const updated = game.animate(elapsed/1000);
+          if (updated) updateUI();
+          requestAnimationFrame(loop);
+        }
+
+        // pause on blur
+        window.addEventListener('blur', ()=>{ if (game.status === 'playing') game.pause(); updateUI(); });
+
+        // set initial
+        game.reset();
+        resize();
+        updateUI();
+        requestAnimationFrame(loop);
+      })();
+    }
+  </script>
+</body>
+</html>

@@ -256,6 +256,167 @@ shell on Windows is PowerShell 5.1, which does not support it.
 | `review-findings.md` | Exercise B - you will fill this |
 | `improvement-log.md` | Runs all semester. Start it today. |
 
+## Issue triage tool
+
+Set a real provider API key and a compatible `LLM_MODEL` in the root `.env`.
+The tool uses DSPy to turn one issue into one validated JSON record:
+
+```bash
+uv run python -m triage.cli --split dev --repo hono --number 3891
+uv run python -m triage.cli --issue issue.json
+uv run python -m triage.cli --issue github-issue.json --repo textual
+```
+
+Use `--issue -` to read JSON from stdin. File input needs `repo`, `number`,
+and `title`; `body` is optional. `--repo` supplies repository context for raw
+GitHub API issue JSON, which does not contain a `repo` field. Supported repository
+names are `litestar`, `hono`, and `textual` (full names also work inside JSON).
+Snapshot selection supports `train` and `dev` only.
+
+Output contains `repo`, `number`, `issue_type`, `component`, `severity`,
+`has_reproduction_steps`, `summary`, `rationale`, `confidence`, and
+`needs_human_review`. Component names follow each project's taxonomy in
+`config/repos.toml`; Textual has no component taxonomy and uses null.
+Unknown information stays unknown. Confidence is a model self-estimate.
+Every record requires human review, even when the model reports confidence 1.0.
+Automatic routing remains disabled until classification quality has been measured.
+Routing now computes queue recommendations and response deadlines while preserving
+the mandatory human review flag. It does not modify GitHub issues or assign teams.
+
+File/stdin JSON is limited to 1 MiB before parsing; local snapshots are limited
+to 16 MiB. Common API-key formats, private key blocks, and configured provider/GitHub
+credentials are redacted from title/body before model calls and from returned
+summary/rationale. This is best-effort redaction, not complete sensitive-data
+detection. Send only issue data approved for your configured model provider.
+
+Only the JSON result goes to stdout. Input/configuration failures return exit
+code 2; prediction failures return 1 without producing a partial record.
+Tests mock model calls and need no credentials. Design choices are recorded in
+`docs/decisions.md`.
+
+### Routing and daily batches
+
+Route an existing triage record without calling a model:
+
+```bash
+uv run python -m triage.cli route --record triaged-issue.json
+uv run python -m triage.cli batch --input triaged-day.json
+```
+
+Batch input is a JSON array. The default `--kind triage` accepts the existing
+triage schema and works without credentials. To triage and route raw incoming
+issues in one pass, use:
+
+```bash
+uv run python -m triage.cli batch --input issues-day.json --kind issue --model openai/gpt-6.1-sol
+```
+
+Each raw issue needs `repo`, `number`, `title`, and optionally `body`, just like
+single-issue intake. This path uses your configured provider and available API
+quota. Each unique valid issue is predicted once at the application level;
+the provider's existing retry/adapter behavior still applies. The extractor is
+initialized only once, after the first valid nonduplicate raw input is found.
+
+Queues are project-specific. Critical severity takes precedence and goes to
+`<repo>/urgent`. Otherwise unknown types or confidence below 0.8 go to
+`<repo>/triage`. Documentation, questions, and meta issues go to `documentation`,
+`support`, and `maintenance`. Bugs and enhancements use an available component
+queue; without a component they go to `bugs` or `feature-requests`.
+
+| Severity | Priority | Response target |
+|---|---|---|
+| critical | urgent | 1 hour |
+| high | high | 24 hours |
+| medium | normal | 72 hours |
+| low | low | 168 hours |
+| unknown | high | 24 hours |
+
+These are elapsed-hour response targets from receipt, not promised resolution
+times or business-hour deadlines. A batch shares one receipt timestamp, including
+time spent predicting. Pass `--received-at 2026-10-15T12:00:00+03:00` to replay a
+receipt time. Naive timestamps are rejected; returned timestamps are UTC.
+Neither missing reproduction steps nor low confidence reduces urgency.
+
+Each routing result contains the original `triage` record (including
+`needs_human_review: true`), `queue`, `priority`, `due_in_hours`, `received_at`,
+`due_at`, and `policy_version`. Routing decisions remain subject to human review;
+confidence 1.0 does not authorize external actions.
+
+Batch JSON contains `total`, `succeeded`, `failed`, a shared `received_at`, and
+ordered `results`. Each result has its zero-based input `index`, a `status`, and
+either a `decision` or a safe `error_code`. Bad records and provider failures do
+not stop subsequent issues. Duplicate `(repo, number)` identities produce
+`duplicate_issue` and never trigger another model call, even if the first
+occurrence failed. Different projects may reuse issue numbers.
+
+Batch input is limited to 16 MiB and 1,000 items. Raw issue field limits still
+apply. Processing is sequential to bound provider concurrency. Empty batches
+succeed without initializing a model. Configuration is attempted only once;
+provider failures after initialization are recorded separately per item.
+Use `--input -` or `--record -` for stdin. A fully successful batch exits 0,
+partial/all item failure exits 1 with a JSON report, and invalid top-level input
+exits 2 with an error on stderr. To retry partial failures, select those original
+input indexes; resubmitting a full successful batch can make model calls again.
+
+## First file-reading agent
+
+`src/myfirstagents3.py` is a standalone learning example in the project's source
+tree. Run it from the repository root:
+
+```bash
+uv sync
+uv run python -m myfirstagents3
+```
+
+Set `OPENAI_API_KEY` in the ignored `.env` file. The example uses `gpt-5-mini`
+to ask for `example.txt`, executes the model's `read_file` request locally,
+and sends the result back so the model can answer. Place the example text in
+`tools/example.txt`; tool paths are relative to `tools/`. Only UTF-8 `.txt`
+files within that directory up to 64 KiB are readable, and the existing
+credential redactor runs before file contents are sent to the model.
+
+Importing the module makes no API calls. Each run allows at most five model
+requests with a 30-second timeout per request and no automatic retries. API
+quota and request limits still apply. Tests use mocked responses and no API key.
+
+## Interactive coding agent
+
+`src/codingagent.py` builds on the file-reading example with directory listing,
+file creation/editing, and shell commands. It uses the same `OPENAI_API_KEY`
+in the project's `.env` and defaults to `gpt-5-mini`.
+
+```bash
+uv sync
+uv run codingagent
+uv run python -m codingagent --task "Read tools/example.txt and tell me its contents."
+uv run codingagent --workspace ./scratch --task "Create a hello.py that prints hello world."
+```
+
+The workspace must already exist and defaults to this repository. Paths are
+relative to it; file tools reject paths outside it, credential files, Git
+internals, virtualenv files, and the sealed test snapshot. Text reads/writes
+are limited to 1 MiB. Outputs use the project's credential redactor.
+
+Shell commands show the exact command and workspace and require `y` before
+execution. They run in the platform's default shell (cmd.exe on Windows), with
+a 120-second timeout. The approved shell is **not sandboxed**: workspace file
+restrictions do not constrain shell commands. Review commands before approval.
+Each turn allows ten model requests. API requests have a 30-second timeout and
+no automatic retries. Type `exit`/`quit` or press Ctrl+C at the prompt to stop.
+
+## Snake game
+
+The coding agent generated an offline browser game in `games/snake/`.
+Open `games/snake/index.html` in a browser and press **Start**. Use the arrow
+keys or WASD to steer, Space to pause/resume, and R to restart. Touch direction
+buttons are available on mobile. Best scores are stored in the browser.
+
+Run the game-engine checks without installing any packages:
+
+```bash
+node --test games/snake/game.test.cjs
+```
+
 ## Commands
 
 ```bash

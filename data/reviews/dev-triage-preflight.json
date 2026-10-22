@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-15",
+  "issue": {"repo": "hono", "number": 4164},
+  "contains_raw_provider_errors_or_credentials": false,
+  "attempts": [
+    {
+      "model": "openai/gpt-6.1-Sol",
+      "network_context": "workspace sandbox",
+      "error_type": "ConnectionError",
+      "category": "network access blocked",
+      "triage_record": null
+    },
+    {
+      "model": "openai/gpt-6.1-Sol",
+      "network_context": "approved network access",
+      "error_type": "LMUnsupportedModelError",
+      "category": "model identifier or access",
+      "triage_record": null
+    },
+    {
+      "model": "openai/gpt-6.1-sol",
+      "network_context": "approved network access",
+      "error_type": null,
+      "category": "generic CLI prediction failure; diagnosed in the next attempt",
+      "exit_code": 1,
+      "triage_record": null
+    },
+    {
+      "model": "openai/gpt-6.1-sol",
+      "network_context": "approved network access",
+      "error_type": "LMRateLimitError",
+      "category": "insufficient quota or billing capacity",
+      "triage_record": null
+    }
+  ],
+  "resolution": "User requested leaving the blocked-run findings for now; no more live attempts.",
+  "official_model_reference": "https://developers.openai.com/api/docs/models/gpt-6.1-sol"
+}

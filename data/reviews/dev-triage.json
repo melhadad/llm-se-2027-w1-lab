@@ -1,0 +1,227 @@
+{
+  "source": "data/snapshot/dev.json",
+  "seed": 20261015,
+  "run_at_utc": "2026-10-15T09:43:11.565791+00:00",
+  "results": [
+    {
+      "repo": "hono",
+      "number": 4164,
+      "title": "AWS API Gateway V2 and Hono Lambda",
+      "url": "https://github.com/honojs/hono/issues/4164",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "hono",
+      "number": 4127,
+      "title": "Support for Bun + Socket.io + Hono Integration (Works on Node.js, not Bun)",
+      "url": "https://github.com/honojs/hono/issues/4127",
+      "gold_type": "enhancement",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "hono",
+      "number": 4577,
+      "title": "Customization of generated CSS classname",
+      "url": "https://github.com/honojs/hono/issues/4577",
+      "gold_type": "enhancement",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "hono",
+      "number": 4625,
+      "title": "In version 4.11.4, the `verify` method in JWT changed so that the third parameter, which was previously optional, is now required.",
+      "url": "https://github.com/honojs/hono/issues/4625",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "hono",
+      "number": 3908,
+      "title": "`Content-Type` header only works with `ctx.body()`",
+      "url": "https://github.com/honojs/hono/issues/3908",
+      "gold_type": "enhancement",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "hono",
+      "number": 3969,
+      "title": "hope to support sending ping and receiving pong when using websockt",
+      "url": "https://github.com/honojs/hono/issues/3969",
+      "gold_type": "enhancement",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "hono",
+      "number": 3935,
+      "title": "ci: type error due to Deno version increase and typescript version update",
+      "url": "https://github.com/honojs/hono/issues/3935",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 5008,
+      "title": "Bug(channels): single exception in backend.publish breaks all subsequent events publishing",
+      "url": "https://github.com/litestar-org/litestar/issues/5008",
+      "gold_type": "bug",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 4073,
+      "title": "Bug: Unable to test any Redis-Cached endpoint",
+      "url": "https://github.com/litestar-org/litestar/issues/4073",
+      "gold_type": "bug",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 4682,
+      "title": "Bug: inconsistent type of Decimal in JSON and OpenAPI schema",
+      "url": "https://github.com/litestar-org/litestar/issues/4682",
+      "gold_type": "bug",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 4482,
+      "title": "Bug: OpenAPI generation with binary request bodies",
+      "url": "https://github.com/litestar-org/litestar/issues/4482",
+      "gold_type": "bug",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 4470,
+      "title": "Enhancement:  Is there a way to configure the OpenApi response globally",
+      "url": "https://github.com/litestar-org/litestar/issues/4470",
+      "gold_type": "enhancement",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 4869,
+      "title": "Bug: `AllowedHostsMiddleware` rejects valid hosts when the `Host` header includes a port",
+      "url": "https://github.com/litestar-org/litestar/issues/4869",
+      "gold_type": "bug",
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "litestar",
+      "number": 4937,
+      "title": "Bug: litestar-msgspec 0.19 is broken on Python 3.14",
+      "url": "https://github.com/litestar-org/litestar/issues/4937",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "textual",
+      "number": 5745,
+      "title": "Emojis printed in plotext plots appear strange",
+      "url": "https://github.com/Textualize/textual/issues/5745",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "textual",
+      "number": 6337,
+      "title": "`RichLog.write(expand=True)` not working with latest Rich",
+      "url": "https://github.com/Textualize/textual/issues/6337",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "textual",
+      "number": 5468,
+      "title": "`markup=False` no longer working (since 0.86.0)",
+      "url": "https://github.com/Textualize/textual/issues/5468",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "textual",
+      "number": 6666,
+      "title": "Memory leak — watchers from `self.watch(other, ...)` / `data_bind` are not removed when the owner is removed from the DOM",
+      "url": "https://github.com/Textualize/textual/issues/6666",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "textual",
+      "number": 6472,
+      "title": "Project is missing a RECIPE.md",
+      "url": "https://github.com/Textualize/textual/issues/6472",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    },
+    {
+      "repo": "textual",
+      "number": 5648,
+      "title": "'S3Tree' object has no attribute 'ICON_FILE'",
+      "url": "https://github.com/Textualize/textual/issues/5648",
+      "gold_type": null,
+      "gold_component": null,
+      "exit_code": 2,
+      "stderr": "Failed to initialize disk cache, falling back to memory-only cache: unable to open database file\nConfiguration error: check LLM_MODEL, the provider API key in .env, and installed dependencies.",
+      "record": null
+    }
+  ]
+}
